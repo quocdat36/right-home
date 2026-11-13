@@ -1,0 +1,16 @@
+/* src/app/globals.css */
+@import "tailwindcss";
+
+@theme {
+  --color-forest: #173A35;
+  --color-cream: #F2EBDD;
+  --color-gold: #B18A4A;
+  --color-ink: #24352F;
+  --font-serif: var(--font-serif), Georgia, serif;
+  --font-sans: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Mượt mà hơn trên thiết bị di động */
+html, body {
+  overscroll-behavior-y: contain;
+}

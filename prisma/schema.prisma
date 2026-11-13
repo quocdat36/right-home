@@ -1,0 +1,92 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CustomerStatus {
+  NEW
+  CONTACTED
+  CONSULTING
+  POTENTIAL
+  NOT_SUITABLE
+}
+
+enum SyncStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model CustomerSubmission {
+  id                  String         @id @default(cuid())
+  customerCode        String         @unique // VD: RH-20261113-0042
+  idempotencyKey      String         @unique // Chống gửi trùng khi bấm nhiều lần
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  // Thông tin cơ bản (Màn hình 2)
+  fullName            String
+  phone               String
+  email               String?
+  targetArea          String
+  ageGroup            String?
+  occupation          String?
+  familyStatus        String?
+  initialIntent       String         // Để ở | Kết hợp đầu tư | Đang tìm hiểu
+  privacyConsent      Boolean        @default(true)
+
+  // Điều kiện thực tế (Màn hình 4)
+  budgetRange         String
+  customMaxBudget     Float?         // Đơn vị: tỷ VNĐ
+  bedrooms            String
+  preferredDistrict   String
+  workplaceLocation   String?
+  purchaseTimeline    String
+  financialCapacity   String
+  equityRatio         String?        // Tỷ lệ vốn tự có theo khoảng
+  tradeOffs           String[]       // Danh sách điều sẵn sàng đánh đổi
+
+  // Kết quả Swipe & Phân tích (Màn hình 3 & 6)
+  swipeChoices        Json           // [{ cardId, group, title, decision }]
+  priorityTags        String[]       // Nhóm ưu tiên
+  considerTags        String[]       // Nhóm cân nhắc
+  notPriorityTags     String[]       // Nhóm không ưu tiên
+  undecidedTags       String[]       // Nhóm chưa xác định
+  analysisReport      Json           // Kết quả tổng hợp từ analyzer.ts
+
+  // Theo dõi tương tác & Quản trị
+  requestedConsult    Boolean        @default(false)
+  status              CustomerStatus @default(NEW)
+  adminNote           String?
+
+  // Trạng thái đồng bộ ngoài
+  excelSyncStatus     SyncStatus     @default(PENDING)
+  excelSyncError      String?
+  excelSyncedAt       DateTime?
+  notifySyncStatus    SyncStatus     @default(PENDING)
+  notifySyncError     String?
+
+  @@index([phone])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  role         String   @default("ADMIN")
+  createdAt    DateTime @default(now())
+}
+
+model SystemSetting {
+  key       String   @id // VD: "NOTIFY_EMAILS", "EXCEL_WEBHOOK_URL"
+  value     String
+  updatedAt DateTime @updatedAt
+}
